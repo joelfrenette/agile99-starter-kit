@@ -54,34 +54,25 @@ Agentic Engineering works by giving each AI agent a clear role, mode, and scope.
 ## The Workflow at a Glance
 
 ```
-NEW BRANCH
-    │
-    ▼
-Prompt 1: Mentor / orientation (read docs, confirm understanding)
-Prompt 2: Living docs read + flag gaps
-Prompt 3: Rules confirmation
-    │
-    ▼
-[PLAN] PM produces task breakdown → you approve
-    │
-    ▼
-[BUILD] Architect designs → you approve schema/API/components
-    │
-    ▼
-[CODE] Engineer implements approved plan → commit immediately
-    │
-    ▼
-[QA] Push to staging → wait 3 min → test → collect evidence
-    │
-    ├── Bug found → [fix loop] → commit each fix → retest
-    │
-    ▼
-[UAT] You test in browser as a real user
-    │
-    ├── Fail → back to fix loop
-    │
-    ▼
-[PROMOTE] Merge to production → update living docs → run retro
+A FEATURE IN FIVE
+─────────────────────────────────────────────────────────────
+Chat 1  │ 🔮 Oracle the Organizer  │ PLAN    │ max 20 prompts
+Chat 2  │ 🏗️ The Architect         │ BUILD   │ max 30 prompts
+Chat 3  │ 💻 Cypher the Coder      │ CODE    │ max 40 prompts
+Chat 4  │ ⚡ Trinity the Tester    │ QA+FIX  │ max 40 prompts
+Chat 5  │ 🚚 Tank the Transporter  │ PROMOTE │ max 20 prompts
+UAT     │ ⭐ You (The One)         │ UAT     │ approve/reject
+─────────────────────────────────────────────────────────────
+
+Each chat opens with:
+  1. AIRULES.md + CONTEXT.md confirmation
+  2. Character persona activation
+  3. Phase-specific prompt
+
+Each chat closes with:
+  1. End of Chat Protocol
+  2. V0 updates AIRULES.md + CONTEXT.md + PROMPT-LOG.md
+  3. Commit all three files to GitHub
 ```
 
 ---
@@ -96,23 +87,34 @@ agentic-engineering-starter-kit/
 ├── METHODOLOGY.md                     ← Full methodology reference
 │
 ├── PROMPTS/
-│   ├── 00-agent-onboarding.md         ← First prompt every agent reads on any project
-│   ├── 01-mentor.md                   ← MENTOR mode prompt
-│   ├── 02-plan.md                     ← PLAN mode prompt
-│   ├── 03-architect.md                ← BUILD/ARCHITECT mode prompt
-│   ├── 04-code.md                     ← CODE mode prompt
-│   ├── 05-qa.md                       ← QA/TEST mode prompt
-│   ├── 06-audit.md                    ← AUDIT mode prompt (all audit types)
-│   └── 07-session-preflight.md        ← Pre-flight checklist prompt
+│   ├── 00-onboarding.md               ← First prompt every agent reads on any project
+│   ├── 01-morpheus.md                 ← Morpheus the Mentor (MENTOR mode)
+│   ├── 02-oracle.md                   ← Oracle the Organizer (PLAN mode)
+│   ├── 03-architect.md                ← The Architect (BUILD mode)
+│   ├── 04-cypher.md                   ← Cypher the Coder (CODE mode)
+│   ├── 05-trinity.md                  ← Trinity the Tester (QA/TEST mode)
+│   ├── 06-smith.md                    ← Smith the Scrutinizer (AUDIT mode)
+│   ├── 07-preflight.md                ← Pre-flight checklist (start of every chat)
+│   ├── 08-uat-runner.md               ← Admin UAT Runner build prompt
+│   ├── 09-vision.md                   ← Vision & Goals (before any code)
+│   ├── 10-blueprint.md                ← Product Blueprint (before any code)
+│   ├── 11-checkpoints.md              ← Checkpoints & GitHub best practices
+│   ├── 12-audit-cycles.md             ← Audit cycle calendar & 8S standard
+│   └── 15-personas.md                 ← All Matrix crew persona prompts
 │
 ├── LIVING-DOCS/
+│   ├── 00-vision-template.md          ← Vision & Goals doc (fill before coding)
+│   ├── 00b-blueprint-template.md      ← Product Blueprint doc (fill before coding)
 │   ├── 01-architecture-template.md
 │   ├── 02-database-template.md
 │   ├── 03-api-template.md
 │   ├── 04-components-template.md
 │   ├── 05-features-template.md
+│   ├── 06-uat-runner.md               ← UAT Runner documentation
 │   ├── ADR-template.md                ← Architecture Decision Record template
-│   └── CHANGE-LOG-template.md
+│   ├── AUDIT-LOG.md                   ← 8S scores and audit history
+│   ├── CHANGE-LOG-template.md
+│   └── RETROSPECTIVE-template.md      ← Post-branch retro guide
 │
 └── AUDIT-TEMPLATES/
     ├── radical-simplification.md
@@ -120,6 +122,32 @@ agentic-engineering-starter-kit/
     ├── sql-audit.md
     └── standards-audit.md
 ```
+
+---
+
+## The Simple Rules
+
+**A Feature in Five** -- 5 chats. 5 branches. 1 shipped feature. Every time.
+
+**Prompt 21 is Done** -- Max 20 prompts per chat. Hit 21? Close, open fresh, paste opener.
+
+**New Branch. New Name.** -- One branch = one phase = one character. Always.
+
+**Read Before You Write** -- AIRULES.md + CONTEXT.md confirmed before any code.
+
+**Plan Before You Build** -- The Architect does not build what Oracle has not approved.
+
+**One Thing. One Prompt.** -- "And also..." is a second prompt. Send it separately.
+
+**Show Don't Describe** -- Screenshot + console error + Vercel log. Never just describe a bug.
+
+**Main is Sacred** -- PRs only. Branch protection is on. Non-negotiable.
+
+**Close the Chat, Not the Tab** -- End of Chat Protocol before closing anything.
+
+**Wake Up, Neo** -- UAT is yours. No agent replaces it. Test as a real user.
+
+See `THE-RULES.md` for the full printable one-pager.
 
 ---
 
@@ -181,3 +209,17 @@ Developed across multiple production projects with heavy inspiration from:
 ---
 
 *Agentic Engineering is not a product. It is a methodology. Use it, improve it, share it.*
+---
+
+## Legal Notice
+
+The character names used in this methodology (Morpheus, Oracle, The Architect, Cypher, Trinity, Agent Smith, Tank, Neo / "The One") are references to *The Matrix* film franchise, which is the intellectual property of Warner Bros. Entertainment Inc. and the Wachowskis.
+
+**Agile99 and this starter kit are not affiliated with, endorsed by, or connected to Warner Bros. Entertainment Inc. in any way.** The Matrix character names are used here purely as memorable, educational labels for software development roles -- in the same spirit that developers reference fictional characters to name concepts, patterns, or tools.
+
+No commercial claim is made over any Matrix intellectual property. All trademarks and copyrights related to *The Matrix* remain the exclusive property of their respective owners.
+
+If you prefer to avoid any IP adjacency in a commercial or enterprise context, the character names can be replaced with the generic role names (MENTOR, PLAN, BUILD, CODE, QA, AUDIT, PROMOTE, UAT) at any time -- the methodology works identically either way.
+
+---
+
