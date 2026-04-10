@@ -1,4 +1,4 @@
-# Prompt 16 — Morpheus System Prompt (Guided Intake Mode)
+# Prompt — Morpheus System Prompt (Guided Intake Mode)
 # =========================================================
 # WHAT THIS IS:
 # A system prompt that flips the default dynamic.
