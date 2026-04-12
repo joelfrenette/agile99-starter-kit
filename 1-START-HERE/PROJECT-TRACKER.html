@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agile99 // Project Tracker</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --g:#00ff88;--gm:#d4ffe8;--gd:#7ecfa0;--gdk:#3a6b50;
+  --glow:0 0 10px #00ff88;--glow-sm:0 0 5px #00ff88;
+  --bg:#010a04;--card:#060f08;--border:#1a4d2a;
+  --red:#ff4444;--amber:#ffcc00;--blue:#44aaff;
+  --font:'Share Tech Mono','Courier New',monospace;
+  --display:'VT323',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--gm);font-family:var(--font);font-size:13px;line-height:1.6;min-height:100vh}
+body::after{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 4px);pointer-events:none;z-index:9999}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--gdk)}
+
+/* HEADER */
+.hdr{background:rgba(1,10,4,0.97);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;flex-wrap:wrap;gap:.5rem}
+.hdr-title{font-family:var(--display);font-size:24px;color:var(--g);text-shadow:var(--glow-sm);letter-spacing:0.05em}
+.hdr-meta{font-size:10px;color:var(--gd);letter-spacing:0.15em;text-align:right}
+.hdr-meta strong{color:var(--g)}
+
+/* COUNTDOWN */
+.countdown{background:var(--card);border-bottom:1px solid var(--border);padding:.75rem 2rem;display:flex;gap:2rem;align-items:center;flex-wrap:wrap}
+.cd-item{text-align:center}
+.cd-label{font-size:9px;color:var(--gdk);letter-spacing:0.2em;text-transform:uppercase}
+.cd-val{font-family:var(--display);font-size:28px;color:var(--g);text-shadow:var(--glow-sm);line-height:1}
+.cd-sep{font-family:var(--display);font-size:24px;color:var(--gdk);padding-bottom:8px}
+.milestone-row{display:flex;gap:1.5rem;margin-left:auto;flex-wrap:wrap}
+.milestone{text-align:center;border:1px solid var(--border);padding:.35rem .75rem;min-width:100px}
+.milestone .m-label{font-size:9px;color:var(--gd);letter-spacing:0.15em;text-transform:uppercase}
+.milestone .m-date{font-size:11px;color:var(--g);margin-top:2px}
+
+/* MAIN LAYOUT */
+.main{max-width:1400px;margin:0 auto;padding:1.5rem 2rem;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1rem}
+@media(max-width:1100px){.main{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.main{grid-template-columns:1fr}}
+
+/* KPI CARDS */
+.kpi{border:1px solid var(--border);background:var(--card);padding:1rem;position:relative;cursor:help}
+.kpi:hover{border-color:var(--gd)}
+.kpi-val{font-family:var(--display);font-size:38px;color:var(--g);text-shadow:var(--glow-sm);line-height:1;margin-bottom:4px}
+.kpi-val.negative{color:var(--red);text-shadow:0 0 8px var(--red)}
+.kpi-val.amber{color:var(--amber);text-shadow:0 0 8px var(--amber)}
+.kpi-val.blue{color:var(--blue);text-shadow:0 0 8px var(--blue)}
+.kpi-label{font-size:10px;color:var(--gd);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px}
+.kpi-desc{font-size:10px;color:var(--gdk);line-height:1.5;display:none}
+.kpi:hover .kpi-desc{display:block}
+.status-pill{display:inline-block;font-size:11px;padding:3px 10px;letter-spacing:0.08em}
+.status-green{border:1px solid var(--g);color:var(--g)}
+.status-red{border:1px solid var(--red);color:var(--red)}
+.status-amber{border:1px solid var(--amber);color:var(--amber)}
+.status-blue{border:1px solid var(--blue);color:var(--blue)}
+
+/* WIDE SECTIONS */
+.full-width{grid-column:1/-1}
+.half-width{grid-column:span 2}
+@media(max-width:1100px){.half-width{grid-column:1/-1}}
+
+/* PROGRESS BARS */
+.prog-section{border:1px solid var(--border);background:var(--card);padding:1rem}
+.prog-section h3{font-size:11px;color:var(--g);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:.75rem}
+.prog-bar-wrap{margin-bottom:.75rem}
+.prog-label{display:flex;justify-content:space-between;font-size:11px;color:var(--gd);margin-bottom:4px}
+.prog-bg{height:8px;background:#0a1a0a;border-radius:0}
+.prog-fill{height:8px;border-radius:0;transition:width 0.5s}
+.fill-g{background:var(--g);box-shadow:var(--glow-sm)}
+.fill-r{background:var(--red)}
+.fill-a{background:var(--amber)}
+.fill-b{background:var(--blue)}
+.you-are-here{border-top:2px solid var(--g);padding-top:.5rem;margin-top:.5rem;font-size:11px;color:var(--g);text-shadow:var(--glow-sm)}
+.you-are-here::before{content:'▶ YOU ARE HERE: ';color:var(--gdk)}
+
+/* GANTT */
+.gantt-wrap{border:1px solid var(--border);background:var(--card);padding:1rem;overflow-x:auto}
+.gantt-wrap h3{font-size:11px;color:var(--g);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:1rem}
+.gantt-row{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;min-width:600px}
+.gantt-phase{font-size:10px;color:var(--gd);width:130px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gantt-track{flex:1;height:18px;background:#0a1a0a;border:1px solid var(--border);position:relative;min-width:200px}
+.gantt-bar{position:absolute;height:100%;transition:width 0.3s}
+.gantt-complete{background:var(--g);opacity:0.8}
+.gantt-inprog{background:var(--amber);opacity:0.8;animation:pulse-bar 1.5s ease-in-out infinite}
+.gantt-planned{background:var(--gdk)}
+.gantt-uat{background:var(--blue);opacity:0.8}
+@keyframes pulse-bar{0%,100%{opacity:0.6}50%{opacity:1}}
+.gantt-pct{font-size:10px;color:var(--gd);width:36px;text-align:right;flex-shrink:0}
+.gantt-marker{position:absolute;top:0;bottom:0;width:2px;background:var(--red);z-index:2}
+.gantt-marker::after{content:'TODAY';position:absolute;top:-18px;left:-16px;font-size:8px;color:var(--red);white-space:nowrap;letter-spacing:0.05em}
+
+/* BACKLOG TABLE */
+.backlog{border:1px solid var(--border);background:var(--card);padding:1rem;overflow-x:auto}
+.backlog h3{font-size:11px;color:var(--g);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:.75rem}
+table{width:100%;border-collapse:collapse;font-size:11px;min-width:500px}
+th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--gd);color:var(--g);font-size:10px;letter-spacing:0.1em;text-transform:uppercase}
+td{padding:5px 8px;border-bottom:1px solid var(--border);color:var(--gd);vertical-align:top}
+td:first-child{color:var(--gm)}
+.badge{display:inline-block;font-size:9px;padding:1px 6px;border:1px solid currentColor;letter-spacing:0.06em;text-transform:uppercase}
+.b-done{color:var(--g)}.b-dev{color:var(--amber)}.b-plan{color:var(--gd)}.b-uat{color:var(--blue)}.b-block{color:var(--red)}
+.task-chk{accent-color:var(--g);width:14px;height:14px;cursor:pointer}
+
+/* UAT BRANCH HISTORY */
+.uat-hist{border:1px solid var(--border);background:var(--card);padding:1rem}
+.uat-hist h3{font-size:11px;color:var(--g);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:.75rem}
+.uat-row{display:grid;grid-template-columns:100px 80px 110px 1fr;gap:.5rem;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px;align-items:center}
+.uat-row:last-child{border-bottom:none}
+.uat-head{font-size:10px;color:var(--g);letter-spacing:0.1em;text-transform:uppercase}
+
+/* SPRINT TASKS */
+.sprint-section{border:1px solid var(--border);background:var(--card);padding:1rem}
+.sprint-section h3{font-size:11px;color:var(--g);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:.75rem;display:flex;justify-content:space-between;align-items:center}
+.sprint-toggle{font-size:10px;color:var(--gd);cursor:pointer;border:1px solid var(--border);padding:2px 8px;background:transparent}
+.sprint-toggle:hover{color:var(--g);border-color:var(--g)}
+.task-row{display:flex;align-items:flex-start;gap:.5rem;padding:5px 0;border-bottom:1px solid #0a1a0a}
+.task-row:last-child{border-bottom:none}
+.task-id{font-size:10px;color:var(--gdk);min-width:80px;flex-shrink:0;padding-top:2px}
+.task-name{flex:1;color:var(--gd)}
+.task-name.done{text-decoration:line-through;color:var(--gdk)}
+.task-size{font-size:10px;color:var(--gd);min-width:20px;text-align:right;flex-shrink:0}
+.task-status{min-width:60px;text-align:right;flex-shrink:0}
+
+/* BUTTONS */
+.btn{font-family:var(--font);font-size:10px;padding:4px 12px;border:1px solid var(--gd);background:transparent;color:var(--gd);cursor:pointer;letter-spacing:0.08em;transition:all .15s}
+.btn:hover{border-color:var(--g);color:var(--g)}
+.btn-primary{border-color:var(--g);color:var(--g)}
+.btn-primary:hover{background:var(--g);color:#000}
+
+/* SECTION HEADERS */
+.section-label{font-size:9px;color:var(--gdk);letter-spacing:0.3em;text-transform:uppercase;margin-bottom:4px}
+hr{border:none;border-top:1px solid var(--border);margin:.5rem 0}
+
+/* ADD ITEM FORM */
+.add-form{background:#000;border:1px solid var(--gdk);padding:.75rem;margin-top:.5rem;display:none}
+.add-form.open{display:block}
+.add-form input,.add-form select{font-family:var(--font);font-size:11px;background:var(--bg);border:1px solid var(--border);color:var(--gm);padding:4px 8px;width:100%;margin-bottom:.35rem;outline:none}
+.add-form input:focus,.add-form select:focus{border-color:var(--g)}
+.add-form label{font-size:10px;color:var(--gd);display:block;margin-bottom:2px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <p class="section-label">// agile99 methodology</p>
+    <div class="hdr-title" id="proj-name">PROJECT TRACKER</div>
+  </div>
+  <div class="milestone-row">
+    <div class="milestone"><div class="m-label">Start</div><div class="m-date" id="ms-start">--</div></div>
+    <div class="milestone"><div class="m-label">UAT</div><div class="m-date" id="ms-uat">--</div></div>
+    <div class="milestone"><div class="m-label" style="color:var(--g)">Go Live</div><div class="m-date" id="ms-live" style="color:var(--g)">--</div></div>
+  </div>
+  <div class="hdr-meta">
+    <div>DEV BRANCH: <strong id="cur-branch">dev/setup</strong></div>
+    <div id="cur-time" style="margin-top:2px"></div>
+  </div>
+</div>
+
+<div class="countdown">
+  <div class="cd-item"><div class="cd-label">Days</div><div class="cd-val" id="cd-days">--</div></div>
+  <div class="cd-sep">:</div>
+  <div class="cd-item"><div class="cd-label">Hours</div><div class="cd-val" id="cd-hours">--</div></div>
+  <div class="cd-sep">:</div>
+  <div class="cd-item"><div class="cd-label">Minutes</div><div class="cd-val" id="cd-min">--</div></div>
+  <div class="cd-sep">:</div>
+  <div class="cd-item"><div class="cd-label">Seconds</div><div class="cd-val" id="cd-sec">--</div></div>
+  <div style="margin-left:1.5rem;font-size:10px;color:var(--gdk);align-self:center">COUNTDOWN TO<br>GO LIVE</div>
+  <div style="margin-left:auto;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="openSettings()">⚙ Settings</button>
+    <button class="btn" onclick="exportCSV()">Export CSV</button>
+    <button class="btn" onclick="printUAT()">Print UAT Plan</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- KPI ROW -->
+  <div class="kpi">
+    <div class="kpi-label">PV (Planned)</div>
+    <div class="kpi-val" id="kpi-pv">--</div>
+    <div style="font-size:10px;color:var(--gdk)">% work planned for today</div>
+    <div class="kpi-desc">Planned Value: % of work that SHOULD be done by now based on the schedule. PV = (Planned tasks by today / Total tasks) × 100</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">EV (Earned)</div>
+    <div class="kpi-val" id="kpi-ev">--</div>
+    <div style="font-size:10px;color:var(--gdk)">% work actually complete</div>
+    <div class="kpi-desc">Earned Value: % of work ACTUALLY completed. EV = (Completed tasks / Total tasks) × 100</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">SV (Variance)</div>
+    <div class="kpi-val" id="kpi-sv">--</div>
+    <div style="font-size:10px;color:var(--gdk)">EV minus PV</div>
+    <div class="kpi-desc">Schedule Variance: + = ahead, 0 = on track, - = behind. SV = EV - PV</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">SPI (Index)</div>
+    <div class="kpi-val" id="kpi-spi">--</div>
+    <div style="font-size:10px;color:var(--gdk)">efficiency vs plan</div>
+    <div class="kpi-desc">Schedule Performance Index. SPI ≥ 1.0 = on/ahead of schedule. SPI = EV / PV</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Status</div>
+    <div id="kpi-status" style="margin:4px 0"><span class="status-pill status-green">ON TRACK</span></div>
+    <div class="kpi-desc">SPI ≥ 0.9 = ON TRACK (green). SPI < 0.9 = BEHIND (red). SPI > 1.1 = AHEAD (blue).</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">% Complete</div>
+    <div class="kpi-val" id="kpi-pct">--</div>
+    <div style="font-size:10px;color:var(--gdk)">timeline elapsed</div>
+    <div class="kpi-desc">% Complete = (Days elapsed / Total days) × 100. This is time, not work.</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">ETC (Remaining)</div>
+    <div class="kpi-val" id="kpi-etc">--</div>
+    <div style="font-size:10px;color:var(--gdk)">weeks of work left</div>
+    <div class="kpi-desc">Estimate to Complete. ETC = Remaining work / SPI. Adjusts for your current pace.</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Epics / Stories</div>
+    <div class="kpi-val" id="kpi-epics">--</div>
+    <div style="font-size:10px;color:var(--gdk)">total tracked</div>
+    <div class="kpi-desc">Total epics and stories in the backlog. Epics are major feature areas. Stories are user requirements.</div>
+  </div>
+
+  <!-- FEATURE COUNTS -->
+  <div class="kpi"><div class="kpi-label">Done</div><div class="kpi-val" id="cnt-done">0</div><div style="font-size:10px;color:var(--gdk)">tasks completed</div></div>
+  <div class="kpi"><div class="kpi-label">In Dev</div><div class="kpi-val amber" id="cnt-dev">0</div><div style="font-size:10px;color:var(--gdk)">being built</div></div>
+  <div class="kpi"><div class="kpi-label">In UAT</div><div class="kpi-val blue" id="cnt-uat">0</div><div style="font-size:10px;color:var(--gdk)">in testing</div></div>
+  <div class="kpi"><div class="kpi-label">Planned</div><div class="kpi-val" id="cnt-plan">0</div><div style="font-size:10px;color:var(--gdk)">not yet started</div></div>
+
+  <!-- OVERALL PROGRESS -->
+  <div class="prog-section half-width">
+    <h3>Overall Project Progress</h3>
+    <div class="prog-bar-wrap">
+      <div class="prog-label"><span>Timeline Progress</span><span id="prog-time-pct">0%</span></div>
+      <div class="prog-bg"><div class="prog-fill fill-b" id="prog-time" style="width:0%"></div></div>
+    </div>
+    <div class="prog-bar-wrap">
+      <div class="prog-label"><span>Work Progress (EV)</span><span id="prog-ev-pct">0%</span></div>
+      <div class="prog-bg"><div class="prog-fill fill-g" id="prog-ev" style="width:0%"></div></div>
+    </div>
+    <div class="prog-bar-wrap">
+      <div class="prog-label"><span>Planned Value (PV)</span><span id="prog-pv-pct">0%</span></div>
+      <div class="prog-bg"><div class="prog-fill fill-a" id="prog-pv" style="width:0%"></div></div>
+    </div>
+    <div class="you-are-here" id="you-are-here">Sprint setup -- add your first epic to begin</div>
+  </div>
+
+  <!-- GANTT -->
+  <div class="gantt-wrap half-width">
+    <h3>Development Roadmap (Gantt)</h3>
+    <div id="gantt-rows"></div>
+    <div style="display:flex;gap:1rem;margin-top:.5rem;flex-wrap:wrap">
+      <span style="font-size:10px;color:var(--gd)"><span style="color:var(--g)">■</span> Complete</span>
+      <span style="font-size:10px;color:var(--gd)"><span style="color:var(--amber)">■</span> In Progress</span>
+      <span style="font-size:10px;color:var(--gd)"><span style="color:var(--blue)">■</span> UAT</span>
+      <span style="font-size:10px;color:var(--gd)"><span style="color:var(--gdk)">■</span> Planned</span>
+      <span style="font-size:10px;color:var(--gd)"><span style="color:var(--red)">|</span> Today</span>
+    </div>
+  </div>
+
+  <!-- BACKLOG -->
+  <div class="backlog full-width">
+    <h3 style="font-size:11px;color:var(--g);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:.75rem;display:flex;justify-content:space-between">
+      Backlog
+      <span>
+        <button class="btn" onclick="toggleAdd('add-task-form')">+ Add Task</button>
+        <button class="btn" onclick="toggleAdd('add-epic-form')">+ Add Epic</button>
+      </span>
+    </h3>
+    <div class="add-form" id="add-epic-form">
+      <div class="form-row">
+        <div><label>Epic Name</label><input type="text" id="epic-name" placeholder="e.g. User Authentication"></div>
+        <div><label>Priority</label><select id="epic-priority"><option>High</option><option>Medium</option><option>Low</option></select></div>
+      </div>
+      <div><label>Description (As a... I want... So that...)</label><input type="text" id="epic-desc" placeholder="As a user, I want to log in, so that I can access my account"></div>
+      <button class="btn btn-primary" onclick="addEpic()" style="margin-top:.35rem">Add Epic</button>
+    </div>
+    <div class="add-form" id="add-task-form">
+      <div class="form-row">
+        <div><label>Epic ID</label><input type="text" id="task-epic" placeholder="EPIC-1"></div>
+        <div><label>Story/Task Name</label><input type="text" id="task-name" placeholder="Build login form"></div>
+      </div>
+      <div class="form-row">
+        <div><label>Size</label><select id="task-size"><option>S</option><option>M</option><option>L</option></select></div>
+        <div><label>Status</label><select id="task-status"><option value="plan">Planned</option><option value="dev">In Dev</option><option value="uat">In UAT</option><option value="done">Done</option></select></div>
+      </div>
+      <button class="btn btn-primary" onclick="addTask()" style="margin-top:.35rem">Add Task</button>
+    </div>
+    <table id="backlog-table">
+      <thead><tr><th>ID</th><th>Epic / Story / Task</th><th>Status</th><th>Size</th><th>Done</th></tr></thead>
+      <tbody id="backlog-body"></tbody>
+    </table>
+  </div>
+
+  <!-- UAT BRANCH HISTORY -->
+  <div class="uat-hist half-width">
+    <h3 style="font-size:11px;color:var(--g);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:.75rem;display:flex;justify-content:space-between">
+      UAT Branch History
+      <button class="btn" onclick="addUATBranch()">+ New UAT Branch</button>
+    </h3>
+    <div class="uat-row">
+      <span class="uat-head">Branch</span><span class="uat-head">Status</span><span class="uat-head">Date</span><span class="uat-head">Features UAT'd</span>
+    </div>
+    <div id="uat-history"></div>
+  </div>
+
+  <!-- CURRENT SPRINT TASKS -->
+  <div class="sprint-section half-width">
+    <h3>Current Sprint Tasks
+      <button class="btn sprint-toggle" onclick="toggleSprint()">Collapse</button>
+    </h3>
+    <div id="sprint-tasks"></div>
+  </div>
+
+  <!-- AUTO QA / UAT TEST PLAN -->
+  <div class="sprint-section full-width" id="uat-plan-section" style="display:none">
+    <h3>Auto-Generated UAT Test Plan</h3>
+    <div id="uat-plan-content"></div>
+  </div>
+
+</div>
+
+<!-- SETTINGS MODAL -->
+<div id="settings-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:1000;display:none;align-items:center;justify-content:center">
+  <div style="background:var(--card);border:1px solid var(--g);padding:2rem;max-width:480px;width:90%;box-shadow:var(--glow)">
+    <h3 style="font-family:var(--display);font-size:28px;color:var(--g);margin-bottom:1rem">Settings</h3>
+    <div style="margin-bottom:.75rem"><label style="font-size:10px;color:var(--gd);display:block;margin-bottom:4px">Project Name</label><input type="text" id="s-proj" style="font-family:var(--font);font-size:12px;background:var(--bg);border:1px solid var(--border);color:var(--gm);padding:6px 10px;width:100%" placeholder="My App"></div>
+    <div style="margin-bottom:.75rem"><label style="font-size:10px;color:var(--gd);display:block;margin-bottom:4px">Current Branch</label><input type="text" id="s-branch" style="font-family:var(--font);font-size:12px;background:var(--bg);border:1px solid var(--border);color:var(--gm);padding:6px 10px;width:100%" placeholder="dev/feature-name"></div>
+    <div style="margin-bottom:.75rem"><label style="font-size:10px;color:var(--gd);display:block;margin-bottom:4px">You Are Here (current story)</label><input type="text" id="s-here" style="font-family:var(--font);font-size:12px;background:var(--bg);border:1px solid var(--border);color:var(--gm);padding:6px 10px;width:100%" placeholder="EPIC-1-S2: Build login form"></div>
+    <div style="margin-bottom:.75rem"><label style="font-size:10px;color:var(--gd);display:block;margin-bottom:4px">Project Start Date</label><input type="date" id="s-start" style="font-family:var(--font);font-size:12px;background:var(--bg);border:1px solid var(--border);color:var(--gm);padding:6px 10px;width:100%"></div>
+    <div style="margin-bottom:.75rem"><label style="font-size:10px;color:var(--gd);display:block;margin-bottom:4px">UAT Date</label><input type="date" id="s-uat" style="font-family:var(--font);font-size:12px;background:var(--bg);border:1px solid var(--border);color:var(--gm);padding:6px 10px;width:100%"></div>
+    <div style="margin-bottom:1.25rem"><label style="font-size:10px;color:var(--gd);display:block;margin-bottom:4px">Go Live Date</label><input type="date" id="s-live" style="font-family:var(--font);font-size:12px;background:var(--bg);border:1px solid var(--border);color:var(--gm);padding:6px 10px;width:100%"></div>
+    <div style="display:flex;gap:.5rem">
+      <button class="btn btn-primary" onclick="saveSettings()" style="flex:1">Save Settings</button>
+      <button class="btn" onclick="closeSettings()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+const KEY = 'agile99-tracker';
+function load(){return JSON.parse(localStorage.getItem(KEY)||'{}');}
+function save(d){localStorage.setItem(KEY,JSON.stringify(d));}
+
+function defaultState(){return{
+  project:'MY PROJECT',
+  branch:'dev/setup',
+  here:'Sprint setup -- add your first epic',
+  startDate:'',uatDate:'',liveDate:'',
+  epics:[],tasks:[],
+  uatBranches:[]
+};}
+
+let state = {...defaultState(),...load()};
+
+// ── Countdown ──────────────────────────────────────────────────
+function updateCountdown(){
+  if(!state.liveDate){['cd-days','cd-hours','cd-min','cd-sec'].forEach(id=>{document.getElementById(id).textContent='--';}); return;}
+  const live=new Date(state.liveDate+'T17:00:00');
+  const diff=live-new Date();
+  if(diff<=0){['cd-days','cd-hours','cd-min','cd-sec'].forEach((id,i)=>{document.getElementById(id).textContent=['0','0','0','0'][i];});return;}
+  const d=Math.floor(diff/86400000);
+  const h=Math.floor((diff%86400000)/3600000);
+  const m=Math.floor((diff%3600000)/60000);
+  const s=Math.floor((diff%60000)/1000);
+  document.getElementById('cd-days').textContent=d;
+  document.getElementById('cd-hours').textContent=String(h).padStart(2,'0');
+  document.getElementById('cd-min').textContent=String(m).padStart(2,'0');
+  document.getElementById('cd-sec').textContent=String(s).padStart(2,'0');
+}
+
+// ── KPIs ───────────────────────────────────────────────────────
+function calcKPIs(){
+  const total=state.tasks.length||1;
+  const done=state.tasks.filter(t=>t.status==='done').length;
+  const dev=state.tasks.filter(t=>t.status==='dev').length;
+  const uat=state.tasks.filter(t=>t.status==='uat').length;
+  const plan=state.tasks.filter(t=>t.status==='plan').length;
+
+  document.getElementById('cnt-done').textContent=done;
+  document.getElementById('cnt-dev').textContent=dev;
+  document.getElementById('cnt-uat').textContent=uat;
+  document.getElementById('cnt-plan').textContent=plan;
+  document.getElementById('kpi-epics').textContent=state.epics.length+'/'+total;
+
+  const ev=Math.round((done/total)*100);
+  let pv=0,pct=0,etc='--';
+  if(state.startDate&&state.liveDate){
+    const start=new Date(state.startDate),live=new Date(state.liveDate),now=new Date();
+    const total_days=(live-start)/86400000;
+    const elapsed=(now-start)/86400000;
+    pct=Math.max(0,Math.min(100,Math.round((elapsed/total_days)*100)));
+    pv=Math.round((elapsed/total_days)*100);
+    const remaining_weeks=Math.max(0,Math.round((live-now)/604800000));
+    const spi=pv>0?ev/pv:1;
+    etc=spi>0?Math.round(remaining_weeks/spi)+' wks':'--';
+    document.getElementById('prog-time').style.width=pct+'%';
+    document.getElementById('prog-time-pct').textContent=pct+'%';
+  }
+  const sv=ev-pv;
+  const spi=pv>0?(ev/pv).toFixed(2):1;
+
+  document.getElementById('kpi-pv').textContent=pv+'%';
+  document.getElementById('kpi-ev').textContent=ev+'%';
+
+  const svEl=document.getElementById('kpi-sv');
+  svEl.textContent=(sv>=0?'+':'')+sv+'%';
+  svEl.className='kpi-val'+(sv<0?' negative':sv>5?' blue':'');
+
+  const spiEl=document.getElementById('kpi-spi');
+  spiEl.textContent=spi;
+  spiEl.className='kpi-val'+(spi<0.9?' negative':spi>1.1?' blue':'');
+
+  const spiNum=parseFloat(spi);
+  const statusEl=document.getElementById('kpi-status');
+  if(spiNum>=0.9&&spiNum<=1.1) statusEl.innerHTML='<span class="status-pill status-green">ON TRACK</span>';
+  else if(spiNum<0.9) statusEl.innerHTML='<span class="status-pill status-red">BEHIND</span>';
+  else statusEl.innerHTML='<span class="status-pill status-blue">AHEAD</span>';
+
+  document.getElementById('kpi-pct').textContent=pct+'%';
+  document.getElementById('kpi-etc').textContent=etc;
+
+  document.getElementById('prog-ev').style.width=ev+'%';
+  document.getElementById('prog-ev-pct').textContent=ev+'%';
+  document.getElementById('prog-pv').style.width=pv+'%';
+  document.getElementById('prog-pv-pct').textContent=pv+'%';
+}
+
+// ── Gantt ───────────────────────────────────────────────────────
+function renderGantt(){
+  const rows=document.getElementById('gantt-rows');
+  if(!state.epics.length){rows.innerHTML='<div style="font-size:11px;color:var(--gdk);padding:.5rem">No epics yet. Use Settings ⚙ to add project dates, then add epics.</div>';return;}
+  
+  const totalDays=state.startDate&&state.liveDate?Math.max(1,(new Date(state.liveDate)-new Date(state.startDate))/86400000):100;
+  const elapsed=state.startDate?Math.min(totalDays,(new Date()-new Date(state.startDate))/86400000):0;
+  const todayPct=Math.round((elapsed/totalDays)*100);
+
+  rows.innerHTML=state.epics.map((epic,i)=>{
+    const epicTasks=state.tasks.filter(t=>t.epicId===epic.id);
+    const done=epicTasks.filter(t=>t.status==='done').length;
+    const total=epicTasks.length||1;
+    const pct=Math.round((done/total)*100);
+    const hasdev=epicTasks.some(t=>t.status==='dev');
+    const hasuat=epicTasks.some(t=>t.status==='uat');
+    const cls=pct===100?'gantt-complete':hasuat?'gantt-uat':hasdev?'gantt-inprog':'gantt-planned';
+    const startPct=Math.round((i/state.epics.length)*80);
+    const widthPct=Math.round(80/state.epics.length);
+    return `<div class="gantt-row">
+      <div class="gantt-phase" title="${epic.name}">${epic.id}: ${epic.name}</div>
+      <div class="gantt-track">
+        <div class="gantt-bar ${cls}" style="left:${startPct}%;width:${widthPct}%;"></div>
+        <div class="gantt-marker" style="left:${todayPct}%"><span style="font-size:8px;color:var(--red);position:absolute;top:-14px;left:-12px;white-space:nowrap">TODAY</span></div>
+      </div>
+      <div class="gantt-pct">${pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Backlog ────────────────────────────────────────────────────
+function renderBacklog(){
+  const tbody=document.getElementById('backlog-body');
+  if(!state.tasks.length&&!state.epics.length){tbody.innerHTML='<tr><td colspan="5" style="color:var(--gdk);padding:.75rem">No items yet. Click + Add Epic to begin.</td></tr>';return;}
+  let rows='';
+  state.epics.forEach(epic=>{
+    rows+=`<tr><td style="color:var(--g)">${epic.id}</td><td><strong style="color:var(--g)">${epic.name}</strong><br><span style="font-size:10px;color:var(--gdk)">${epic.desc||''}</span></td><td><span class="badge b-plan">${epic.priority||'Medium'}</span></td><td>--</td><td>--</td></tr>`;
+    state.tasks.filter(t=>t.epicId===epic.id).forEach(task=>{
+      const sc={'done':'b-done','dev':'b-dev','uat':'b-uat','plan':'b-plan'}[task.status]||'b-plan';
+      const sl={'done':'DONE','dev':'IN DEV','uat':'IN UAT','plan':'PLANNED'}[task.status]||'PLANNED';
+      rows+=`<tr>
+        <td style="color:var(--gdk);font-size:10px">${task.id}</td>
+        <td class="task-name ${task.status==='done'?'done':''}">${task.name}</td>
+        <td><span class="badge ${sc}">${sl}</span></td>
+        <td style="font-size:10px;color:var(--gd)">${task.size||'M'}</td>
+        <td><input type="checkbox" class="task-chk" ${task.status==='done'?'checked':''} onchange="toggleTask('${task.id}',this.checked)"></td>
+      </tr>`;
+    });
+  });
+  tbody.innerHTML=rows;
+}
+
+// ── Sprint Tasks ───────────────────────────────────────────────
+function renderSprint(){
+  const el=document.getElementById('sprint-tasks');
+  const active=state.tasks.filter(t=>t.status==='dev'||t.status==='uat');
+  if(!active.length){el.innerHTML='<div style="font-size:11px;color:var(--gdk);padding:.5rem">No active tasks. Move tasks to "In Dev" to see them here.</div>';return;}
+  el.innerHTML=active.map(t=>{
+    const sc={'dev':'b-dev','uat':'b-uat'}[t.status]||'b-plan';
+    const sl={'dev':'IN DEV','uat':'IN UAT'}[t.status]||'';
+    return `<div class="task-row">
+      <input type="checkbox" class="task-chk" ${t.status==='done'?'checked':''} onchange="toggleTask('${t.id}',this.checked)" style="flex-shrink:0;margin-top:3px">
+      <span class="task-id">${t.id}</span>
+      <span class="task-name ${t.status==='done'?'done':''}">${t.name}</span>
+      <span class="task-size">${t.size}</span>
+      <span class="task-status"><span class="badge ${sc}">${sl}</span></span>
+    </div>`;
+  }).join('');
+}
+
+// ── UAT History ────────────────────────────────────────────────
+function renderUAT(){
+  const el=document.getElementById('uat-history');
+  if(!state.uatBranches.length){el.innerHTML='<div style="font-size:11px;color:var(--gdk);padding:.5rem">No UAT branches yet. Morpheus will add these automatically at end of BUILD sessions.</div>';return;}
+  el.innerHTML=state.uatBranches.map(b=>`
+    <div class="uat-row">
+      <span style="color:var(--g)">${b.branch}</span>
+      <span><span class="badge ${b.status==='CLOSED'?'b-done':b.status==='OPEN'?'b-dev':'b-plan'}">${b.status}</span></span>
+      <span style="color:var(--gd);font-size:10px">${b.date}</span>
+      <span style="color:var(--gd)">${b.features}</span>
+    </div>`).join('');
+}
+
+// ── Update all ─────────────────────────────────────────────────
+function renderAll(){
+  document.getElementById('proj-name').textContent=state.project||'PROJECT TRACKER';
+  document.getElementById('cur-branch').textContent=state.branch||'dev/setup';
+  document.getElementById('you-are-here').textContent=state.here||'No active story';
+  ['ms-start','ms-uat','ms-live'].forEach((id,i)=>{
+    const d=[state.startDate,state.uatDate,state.liveDate][i];
+    document.getElementById(id).textContent=d?new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'--';
+  });
+  calcKPIs();renderGantt();renderBacklog();renderSprint();renderUAT();
+}
+
+// ── Actions ────────────────────────────────────────────────────
+function toggleTask(id,done){
+  const t=state.tasks.find(t=>t.id===id);
+  if(t){t.status=done?'done':t.prevStatus||'plan';if(done)t.prevStatus=t.status;}
+  save(state);renderAll();
+}
+
+function addEpic(){
+  const name=document.getElementById('epic-name').value.trim();
+  if(!name)return;
+  const id='EPIC-'+(state.epics.length+1);
+  state.epics.push({id,name,priority:document.getElementById('epic-priority').value,desc:document.getElementById('epic-desc').value.trim()});
+  document.getElementById('epic-name').value='';
+  document.getElementById('epic-desc').value='';
+  save(state);renderAll();toggleAdd('add-epic-form');
+}
+
+function addTask(){
+  const name=document.getElementById('task-name').value.trim();
+  const epicId=document.getElementById('task-epic').value.trim();
+  if(!name||!epicId)return;
+  const epicTasks=state.tasks.filter(t=>t.epicId===epicId);
+  const id=epicId+'-T'+(epicTasks.length+1);
+  state.tasks.push({id,epicId,name,size:document.getElementById('task-size').value,status:document.getElementById('task-status').value});
+  document.getElementById('task-name').value='';
+  save(state);renderAll();toggleAdd('add-task-form');
+}
+
+function addUATBranch(){
+  const branch=prompt('UAT branch name (e.g. uat/sprint-3):');
+  if(!branch)return;
+  const features=prompt('Features being UAT\'d (comma separated):');
+  state.uatBranches.push({branch,status:'OPEN',date:new Date().toLocaleDateString(),features:features||''});
+  save(state);renderAll();
+}
+
+function toggleAdd(id){const el=document.getElementById(id);el.classList.toggle('open');}
+function toggleSprint(){const el=document.getElementById('sprint-tasks');el.style.display=el.style.display==='none'?'block':'none';}
+
+// ── Settings ───────────────────────────────────────────────────
+function openSettings(){
+  document.getElementById('s-proj').value=state.project||'';
+  document.getElementById('s-branch').value=state.branch||'';
+  document.getElementById('s-here').value=state.here||'';
+  document.getElementById('s-start').value=state.startDate||'';
+  document.getElementById('s-uat').value=state.uatDate||'';
+  document.getElementById('s-live').value=state.liveDate||'';
+  document.getElementById('settings-modal').style.display='flex';
+}
+function closeSettings(){document.getElementById('settings-modal').style.display='none';}
+function saveSettings(){
+  state.project=document.getElementById('s-proj').value;
+  state.branch=document.getElementById('s-branch').value;
+  state.here=document.getElementById('s-here').value;
+  state.startDate=document.getElementById('s-start').value;
+  state.uatDate=document.getElementById('s-uat').value;
+  state.liveDate=document.getElementById('s-live').value;
+  save(state);renderAll();closeSettings();
+}
+
+// ── Export / Print ─────────────────────────────────────────────
+function exportCSV(){
+  let csv='ID,Name,Status,Size,Epic\n';
+  state.tasks.forEach(t=>csv+=`${t.id},"${t.name}",${t.status},${t.size||'M'},${t.epicId}\n`);
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`${state.project.replace(/\s/g,'-')}-tracker.csv`;a.click();
+}
+
+function printUAT(){
+  const section=document.getElementById('uat-plan-section');
+  const dev=state.tasks.filter(t=>t.status==='dev'||t.status==='uat');
+  if(!dev.length){alert('No active tasks to generate UAT plan from.');return;}
+  section.style.display='block';
+  document.getElementById('uat-plan-content').innerHTML=`
+    <p style="font-size:11px;color:var(--gd);margin-bottom:.75rem">Auto-generated UAT Test Plan -- ${new Date().toLocaleDateString()}</p>
+    <div style="font-size:11px;color:var(--gd)">
+    ${dev.map(t=>`
+      <div style="border-top:1px solid var(--border);padding:.5rem 0">
+        <div style="color:var(--g);margin-bottom:.25rem">${t.id}: ${t.name}</div>
+        <div style="color:var(--gdk)">
+          <label style="display:block;margin-bottom:3px"><input type="checkbox" style="accent-color:var(--g);margin-right:6px"> Happy path: Feature works as expected</label>
+          <label style="display:block;margin-bottom:3px"><input type="checkbox" style="accent-color:var(--g);margin-right:6px"> Edge case: Empty/null input handled correctly</label>
+          <label style="display:block;margin-bottom:3px"><input type="checkbox" style="accent-color:var(--g);margin-right:6px"> Edge case: Boundary values work correctly</label>
+          <label style="display:block;margin-bottom:3px"><input type="checkbox" style="accent-color:var(--g);margin-right:6px"> Failure: Auth failure handled gracefully</label>
+          <label style="display:block;margin-bottom:3px"><input type="checkbox" style="accent-color:var(--g);margin-right:6px"> Regression: Existing related features still work</label>
+        </div>
+      </div>`).join('')}
+    </div>
+    <div style="margin-top:1rem;display:flex;gap:.5rem">
+      <button class="btn btn-primary" onclick="window.print()">Print UAT Sheet</button>
+      <button class="btn" onclick="document.getElementById('uat-plan-section').style.display='none'">Close</button>
+    </div>`;
+  section.scrollIntoView({behavior:'smooth'});
+}
+
+// ── Clock ──────────────────────────────────────────────────────
+function updateClock(){
+  const now=new Date();
+  document.getElementById('cur-time').textContent=now.toLocaleTimeString('en-US',{hour12:false})+' // '+now.toLocaleDateString();
+}
+
+// ── Init ───────────────────────────────────────────────────────
+renderAll();
+updateClock();setInterval(updateClock,1000);
+updateCountdown();setInterval(updateCountdown,1000);
+</script>
+</body>
+</html>
